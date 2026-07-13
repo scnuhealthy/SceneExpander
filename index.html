@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SceneExpander: Expanding 3D Scenes with Free-Form Inserted Views</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Google Sans', sans-serif;
+            background-color: #ffffff; /* Clean pure white background */
+            color: #1e293b; /* Premium matte charcoal text */
+        }
+        /* Soft, clean background gradient for header */
+        .academic-hero {
+            background: linear-gradient(to bottom, #fbfbfe 0%, #ffffff 100%);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-purple-100 selection:text-purple-900">
+
+    <header class="academic-hero pt-24 pb-14 px-4 text-center">
+        <div class="max-w-5xl mx-auto space-y-6">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
+                SceneExpander: Text-Guided 3D Scene Expansion  via Free-Form View Insertion
+            </h1>
+            
+            <div class="flex justify-center items-center gap-4 text-slate-500 text-sm md:text-base font-normal">
+                <span class="hover:text-purple-600 transition-colors cursor-pointer">Anonymous Authors</span>
+                <span class="text-slate-300">|</span>
+                <span>Anonymous Institution</span>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-3 pt-4">
+                <a href="#" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium py-2 px-5 rounded-full transition-all text-sm shadow-xs inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf text-slate-400"></i> Paper
+                </a>
+                <a href="#" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium py-2 px-5 rounded-full transition-all text-sm shadow-xs inline-flex items-center gap-1.5">
+                    <i class="fa-brands fa-github text-slate-400"></i> Code
+                </a>
+                <a href="#experiments" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-5 rounded-full transition-all text-sm shadow-sm shadow-purple-600/10 inline-flex items-center gap-1.5">
+                    <i class="fa-solid fa-video text-purple-200"></i> Video Demos
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-4 space-y-20">
+
+        <section class="space-y-6">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-file-lines text-lg text-purple-600"></i>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">Abstract</h2>
+            </div>
+            
+            <p class="text-slate-600 leading-relaxed text-justify font-light text-base md:text-[17px]">
+                World building with 3D scene representations is increasingly important for content creation, simulation, and interactive experiences, yet real workflows are inherently iterative: creators repeatedly extend existing scenes under user control. Motivated by this gap, we study <b class="font-bold">text-guided 3D scene expansion via free-form view insertion</b>. Starting from a real scene captured by multi-view images, a user specifies a text expansion intent, which a generative model materializes as an inserted view extending the scene coverage. Unlike simple object editing or style transfer within a fixed scene, the inserted view may be 3D-misaligned with the original reconstruction, introducing geometric shifts, hallucinated content, or view-dependent artifacts that disrupt global multi-view consistency. To address this challenge, we propose SceneExpander, which applies test-time adaptation to a parametric feed-forward 3D reconstruction model with two complementary distillation signals: anchor distillation stabilizes the captured scene using geometric cues from the captured views, while inserted-view self-distillation retains insertion-supported predictions to accommodate the misaligned view. Experiments on ETH scenes and online data demonstrate improved expansion behavior and reconstruction quality under misalignment.
+            </p>
+
+            <div class="bg-slate-50/60 rounded-xl p-4 border border-slate-200/60 flex flex-col items-center">
+                <img src="images/fig1_teaser.png" alt="SceneExpander Teaser (Fig 1)" class="w-full max-w-4xl rounded-lg bg-white border border-slate-100 shadow-xs">
+                <p class="text-xs text-slate-500 mt-3 text-justify max-w-4xl w-full leading-relaxed px-1">
+                    <strong class="text-slate-700 font-medium">Fig. 1: Two examples of controllable 3D scene expansion via text-guided view insertion.</strong> Starting from a 3D reconstruction of captured views, the user requests an additional view beyond the observed region, which is synthesized and inserted to extend the scene. Yellow marks the view-consistent area, and red highlights newly introduced content.
+                </p>
+            </div>
+        </section>
+
+
+        <section class="space-y-6">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-gears text-lg text-purple-600"></i>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">Methodology</h2>
+            </div>
+            
+			<p class="text-slate-600 leading-relaxed text-justify font-light text-base">
+				SceneExpander addresses text-guided 3D scene expansion under free-form inserted views through scene-specific test-time adaptation.
+				Given captured multi-view images and a prompt-generated inserted view that may be geometrically misaligned, SceneExpander jointly preserves the original scene and incorporates newly inserted content.
+				Instead of enforcing hard supervision from the generated view, our framework uses two complementary distillation signals:
+				<strong>(i) Anchor Distillation:</strong> Distills camera parameters, depth maps, and normal maps from the original multi-view observations to stabilize the captured region and prevent the inserted view from corrupting the existing reconstruction.
+				<strong>(ii) Inserted-view Self-distillation:</strong> Integrates the generated inserted view through iteratively refined soft geometry labels, allowing latent geometry and appearance to adapt to the new content while retaining predictions supported by captured views.
+			</p>
+
+
+            <div class="bg-slate-50/60 rounded-xl p-6 border border-slate-200/60 flex flex-col items-center">
+                <img src="images/fig3_pipeline.png" alt="SceneExpander Pipeline (Fig 3)" class="w-full max-w-4xl rounded-lg bg-white border border-slate-100 shadow-xs">
+                <p class="text-xs text-slate-500 mt-4 text-justify max-w-4xl w-full leading-relaxed px-1">
+                    <strong class="text-slate-700 font-medium">Fig. 3: Overview of SceneExpander framework.</strong> (1) A feed-forward reconstructor predicts an initial 3D scene. (2) To accommodate a prompt-generated inserted view that may be 3D-misaligned, we adapt the model at test time using anchor distillation on captured views and inserted-view self-distillation on the new view. (3) The adapted model produces an expanded 3D scene consistent with the captured region while incorporating the inserted content.
+                </p>
+            </div>
+        </section>
+
+
+        <section id="experiments" class="space-y-8">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-chart-bar text-lg text-purple-600"></i>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">Experimental Comparisons</h2>
+            </div>
+            
+            <p class="text-slate-500 font-light text-sm -mt-4 leading-relaxed">
+                We evaluate the performance of our scene expansion method compared to baseline frameworks under varying scenarios below. For a comprehensive visual comparison, we project the updated 3D scenes into sequential video trajectories.
+            </p>
+
+            <div class="space-y-16">
+                
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span> Indoor Scene
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            "To the right of the table in this living room, there is a bathroom with the door open."
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (4 views)</span>
+                            <div class="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-slate-200/50">
+                                <div class="bg-white rounded"><img src="images/dinner_orig_1.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/dinner_orig_2.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/dinner_orig_3.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/dinner_orig_4.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-row md:flex-col items-center justify-center py-2 md:py-0 px-1 shrink-0 text-slate-400">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/dinner_inserted.png" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-camera text-slate-400"></i> Original Scene
+                            </div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Dining_Table_original.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">3DGS</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_3DGS_expand2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">WorldMirror</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_worldmirror_expand2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">OminiVGGT</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_ominivggt_expand2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">TTT3R</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_TTT3R_expand2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-star text-purple-500 text-[10px]"></i> Ours (SceneExpander)
+                            </div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-square object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_ours_expand2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-sky-500 rounded-full"></span> Outdoor Scene
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            "Behind the white table is a wooden bench."
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (4 views)</span>
+                            <div class="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-slate-200/50">
+                                <div class="bg-white rounded"><img src="images/terrace_orig_1.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/terrace_orig_2.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/terrace_orig_3.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/terrace_orig_4.png" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-row md:flex-col items-center justify-center py-2 md:py-0 px-1 shrink-0 text-slate-400">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/terrace_inserted.png" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-camera text-slate-400"></i> Original Scene
+                            </div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_terrace_original.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">3DGS</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_3DGS_expand.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">WorldMirror</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_worldmirror_expand.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">OminiVGGT</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_ominivggt_expand.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-400 text-center">TTT3R</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_TTT3R_expand.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-star text-purple-500 text-[10px]"></i> Ours (SceneExpander)
+                            </div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/terrace_ours_expand.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <section id="additional-results" class="space-y-8">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-photo-film text-lg text-purple-600"></i>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">Qualitative Results</h2>
+            </div>
+            
+            <p class="text-slate-500 font-light text-sm -mt-4 leading-relaxed">
+                We showcase scene expansion results to demonstrate the robustness of SceneExpander. Each case presents the free-form view insertion flow alongside a direct side-by-side video projection comparing the original unexpanded 3D space and our seamlessly expanded scene.
+            </p>
+
+            <div class="space-y-16">
+
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Case 01
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            "Move back, outside the tunnel there’s a stone bench, and a squirrel sits on it."
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (2 views)</span>
+                            <div class="grid grid-cols-2 gap-2 bg-white p-2 rounded-lg border border-slate-200/50 max-w-md">
+                                <div class="bg-white rounded"><img src="images/tunnerl_orig_1.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/tunnerl_orig_2.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+                        <div class="shrink-0 px-1 text-slate-400 flex items-center justify-center">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/tunnerl_inserted.png" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-4xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center"><i class="fa-solid fa-video text-slate-400 mr-1"></i> Original Scene Result</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Archway_Tunnel_original2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center"><i class="fa-solid fa-circle-check text-purple-500 mr-1"></i> Ours (Expanded Scene)</div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Archway_Tunnel_expanded2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Case 02
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            "Walking forward to the end of this botanical garden path."
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (4 views)</span>
+                            <div class="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-slate-200/50">
+                                <div class="bg-white rounded"><img src="images/garden_orig_01.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/garden_orig_02.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/garden_orig_03.png" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/garden_orig_04.png" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+                        <div class="shrink-0 px-1 text-slate-400 flex items-center justify-center">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/garden_inserted.JPG" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-4xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center"><i class="fa-solid fa-video text-slate-400 mr-1"></i> Original Scene Result</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/botanical_garden_original2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center"><i class="fa-solid fa-circle-check text-purple-500 mr-1"></i> Ours (Expanded Scene)</div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/botanical_garden_expanded2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Case 03
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            "In front of the ruins, a few small birds peck at food on the ground."
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (4 views)</span>
+                            <div class="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-slate-200/50">
+                                <div class="bg-white rounded"><img src="images/remain_orig_01.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/remain_orig_02.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/remain_orig_03.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/remain_orig_04.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+                        <div class="shrink-0 px-1 text-slate-400 flex items-center justify-center">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/remain_inserted.png" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-4xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center"><i class="fa-solid fa-video text-slate-400 mr-1"></i> Original Scene Result</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Remains_original2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center"><i class="fa-solid fa-circle-check text-purple-500 mr-1"></i> Ours (Expanded Scene)</div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Remains_expanded2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Case 04
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-3 flex gap-3 items-start max-w-4xl">
+                        <div class="bg-amber-100/80 text-amber-800 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded shadow-2xs mt-0.5 shrink-0 flex items-center gap-1">
+                            <i class="fa-solid fa-terminal text-[9px]"></i> Prompt
+                        </div>
+                        <div class="text-sm text-slate-600 italic font-normal leading-relaxed relative pl-4">
+                            <i class="fa-solid fa-quote-left absolute left-0 top-0 text-amber-300 text-[11px]"></i>
+                            " Shift the view left to the window area: a table with some items, and a dog standing on a stool next to it."
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-4 bg-slate-50/40 p-4 rounded-xl border border-slate-200/60 max-w-4xl">
+                        <div class="flex-1 w-full space-y-1.5">
+                            <span class="text-xs font-medium text-slate-400 block"><i class="fa-solid fa-images mr-1"></i> Input Original Views (4 views)</span>
+                            <div class="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-slate-200/50">
+                                <div class="bg-white rounded"><img src="images/room_orig_01.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/room_orig_02.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/room_orig_03.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                                <div class="bg-white rounded"><img src="images/room_orig_04.jpg" class="w-full h-auto rounded border border-slate-100"></div>
+                            </div>
+                        </div>
+                        <div class="shrink-0 px-1 text-slate-400 flex items-center justify-center">
+                            <div class="flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-500 shadow-2xs">
+                                <i class="fa-solid fa-plus text-purple-500"></i> Insert
+                            </div>
+                        </div>
+                        <div class="w-full md:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-medium text-amber-700 block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generated View</span>
+                            <div class="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs">
+                                <img src="images/room_inserted.jpg" class="w-full h-auto rounded border border-amber-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-4xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-slate-500 text-center"><i class="fa-solid fa-video text-slate-400 mr-1"></i> Original Scene Result</div>
+                            <div class="bg-slate-50 rounded-lg p-1 border border-slate-200/70">
+                                <video class="w-full rounded border border-slate-100 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Room_Cat_original2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 text-center"><i class="fa-solid fa-circle-check text-purple-500 mr-1"></i> Ours (Expanded Scene)</div>
+                            <div class="bg-purple-50/50 rounded-lg p-1 border-2 border-purple-400 shadow-xs shadow-purple-600/5">
+                                <video class="w-full rounded border border-purple-200 aspect-video bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/Room_Cat_expanded2.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+<section id="sequential-editing" class="space-y-8">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <i class="fa-solid fa-clock-rotate-left text-lg text-purple-600"></i>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">Sequential Multi-Turn Scene Expansion</h2>
+            </div>
+            
+            <p class="text-slate-500 font-light text-sm -mt-4 leading-relaxed">
+                We evaluate the capacity of SceneExpander under iterative user controls. Below we present scenarios featuring multi-turn view insertions, where creators repeatedly extend the reconstructed 3D workspace. We provide both the sequential video trajectories and their corresponding geometric/appearance consistency heatmaps.
+            </p>
+
+            <div class="space-y-12">
+
+                <div class="space-y-6">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse"></span> Case 01: 2-Turn Iterative Expansion (Varying Prompts)
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row items-center gap-4 bg-slate-50/40 p-5 rounded-2xl border border-slate-200/60 max-w-5xl">
+                        
+                        <div class="w-full lg:w-36 shrink-0 space-y-1.5">
+                            <span class="text-xs font-semibold text-slate-400 block tracking-tight"><i class="fa-solid fa-images mr-1"></i> Original Views</span>
+                            <div class="grid grid-cols-2 gap-1 bg-white p-1.5 rounded-xl border border-slate-200/50">
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/dinner_orig_1.jpg" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/dinner_orig_2.jpg" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/dinner_orig_3.jpg" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/dinner_orig_4.jpg" class="w-full h-full object-cover"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 w-full flex flex-col md:flex-row items-center justify-start gap-4">
+                            
+                            <div class="flex flex-row md:flex-col items-center justify-center py-1 shrink-0 md:w-36 text-center px-1">
+                                <div class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 max-w-[120px] md:max-w-none italic truncate md:whitespace-normal mb-1" title="&quot;To the right of the table in this living room, there is a bathroom with the door open.&quot;">
+                                    "To the right of the table in this living room, there is a bathroom with the door open."
+                                </div>
+                                <div class="flex items-center gap-1 text-slate-300">
+                                    <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest hidden md:block">Turn 1</span>
+                                    <i class="fa-solid fa-right-long hidden md:block text-slate-400"></i>
+                                    <i class="fa-solid fa-down-long md:hidden text-slate-400"></i>
+                                </div>
+                            </div>
+
+                            <div class="w-full md:w-44 shrink-0 space-y-1">
+                                <span class="text-[10px] font-medium text-slate-400 block text-center md:text-left">Inserted View (Rnd 1)</span>
+                                <div class="bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                    <img src="images/dinner_inserted.png" class="w-full h-auto aspect-square rounded object-cover">
+                                </div>
+                            </div>
+
+                            <div class="flex flex-row md:flex-col items-center justify-center py-1 shrink-0 md:w-36 text-center px-1">
+                                <div class="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 max-w-[120px] md:max-w-none italic truncate md:whitespace-normal mb-1" title="&quot;On the right side of the bathroom, there is a display cabinet filled with multiple anime figures.&quot;">
+                                    "On the right side of the bathroom, there is a display cabinet filled with multiple anime figures."
+                                </div>
+                                <div class="flex items-center gap-1 text-slate-300">
+                                    <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest hidden md:block">Turn 2</span>
+                                    <i class="fa-solid fa-right-long hidden md:block text-slate-400"></i>
+                                    <i class="fa-solid fa-down-long md:hidden text-slate-400"></i>
+                                </div>
+                            </div>
+
+                            <div class="w-full md:w-44 shrink-0 space-y-1">
+                                <span class="text-[10px] font-medium text-slate-400 block text-center md:text-left">Inserted View (Rnd 2)</span>
+                                <div class="bg-white p-1.5 rounded-xl border border-purple-300 shadow-2xs ring-1 ring-purple-100">
+                                    <img src="images/dinner_inserted_2.png" class="w-full h-auto aspect-square rounded object-cover">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 max-w-5xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-play text-purple-500"></i> Sequential Updated 3D Scene Trajectory
+                            </div>
+                            <div class="bg-purple-50/40 rounded-xl p-1 border-2 border-purple-400 shadow-xs">
+                                <video class="w-full rounded-lg aspect-video object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_rgb.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-rose-600 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-fire text-rose-500"></i> Consistency Heatmap
+                            </div>
+                            <div class="bg-rose-50/40 rounded-xl p-1 border border-rose-300/80 shadow-xs">
+                                <video class="w-full rounded-lg aspect-video object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/dinner_depth.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="space-y-6 border-t border-slate-100 pt-10">
+                    <div class="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 bg-sky-500 rounded-full animate-pulse"></span> Case 02: 3-Turn Continuous Expansion (Identical Prompt)
+                    </div>
+
+                    <div class="bg-amber-50/40 border border-dashed border-amber-200 rounded-xl px-4 py-2.5 flex gap-3 items-center max-w-5xl text-xs">
+                        <div class="bg-amber-100/80 text-amber-800 font-bold px-1.5 py-0.5 rounded shrink-0">
+                            Shared Prompt
+                        </div>
+                        <div class="text-slate-600 italic">
+                            "Walk along the bridge as the exit gradually comes into view. Trees line both sides of the road near the exit." (Applied to all insertion stages)
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row items-center gap-4 bg-slate-50/40 p-5 rounded-2xl border border-slate-200/60 max-w-5xl">
+                        
+                        <div class="w-full lg:w-32 shrink-0 space-y-1.5">
+                            <span class="text-xs font-semibold text-slate-400 block tracking-tight"><i class="fa-solid fa-images mr-1"></i> Original Views</span>
+                            <div class="grid grid-cols-2 gap-1 bg-white p-1 rounded-xl border border-slate-200/50">
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/bridge_orig_01.png" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/bridge_orig_02.png" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/bridge_orig_03.png" class="w-full h-full object-cover"></div>
+                                <div class="bg-slate-50 aspect-square rounded overflow-hidden border border-slate-100"><img src="images/bridge_orig_04.png" class="w-full h-full object-cover"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 w-full flex flex-col md:flex-row items-center justify-between gap-1.5">
+                            
+                            <div class="shrink-0 flex flex-col items-center justify-center px-1 text-slate-400 text-[10px]">
+                                <span class="font-bold text-purple-400 uppercase tracking-wider">Turn 1</span>
+                                <i class="fa-solid fa-right-long hidden md:block mt-0.5"></i><i class="fa-solid fa-down-long md:hidden"></i>
+                            </div>
+                            <div class="w-full md:w-36 shrink-0 bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                <img src="images/bridge_inserted_3.png" class="w-full h-auto aspect-square rounded object-cover">
+                            </div>
+
+                            <div class="shrink-0 flex flex-col items-center justify-center px-1 text-slate-400 text-[10px]">
+                                <span class="font-bold text-purple-400 uppercase tracking-wider">Turn 2</span>
+                                <i class="fa-solid fa-right-long hidden md:block mt-0.5"></i><i class="fa-solid fa-down-long md:hidden"></i>
+                            </div>
+                            <div class="w-full md:w-36 shrink-0 bg-white p-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                                <img src="images/bridge_inserted_2.png" class="w-full h-auto aspect-square rounded object-cover">
+                            </div>
+
+                            <div class="shrink-0 flex flex-col items-center justify-center px-1 text-slate-400 text-[10px]">
+                                <span class="font-bold text-purple-500 uppercase tracking-wider">Turn 3</span>
+                                <i class="fa-solid fa-right-long hidden md:block mt-0.5 animate-pulse"></i><i class="fa-solid fa-down-long md:hidden"></i>
+                            </div>
+                            <div class="w-full md:w-36 shrink-0 bg-white p-1.5 rounded-xl border border-purple-300 shadow-xs ring-1 ring-purple-100">
+                                <img src="images/bridge_inserted_1.png" class="w-full h-auto aspect-square rounded object-cover">
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 max-w-5xl">
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-semibold text-purple-600 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-play text-purple-500"></i> Sequential Updated 3D Scene Trajectory
+                            </div>
+                            <div class="bg-purple-50/40 rounded-xl p-1 border-2 border-purple-400 shadow-xs">
+                                <video class="w-full rounded-lg aspect-video object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/bridge_rgb.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="text-xs font-medium text-rose-600 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-fire text-rose-500"></i> Consistency Heatmap
+                            </div>
+                            <div class="bg-rose-50/40 rounded-xl p-1 border border-rose-300/80 shadow-xs">
+                                <video class="w-full rounded-lg aspect-video object-cover bg-white" autoplay loop muted playsinline controls>
+                                    <source src="videos/bridge_depth.mp4" type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white text-slate-400 text-center py-12 text-xs border-t border-slate-100 mt-24">
+        <p>© 2026 SceneExpander.</p>
+    </footer>
+
+</body>
+</html>
